@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.js"></script>
+  <script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+  <script>
+    $(function() {
+      var conn = null;
+
+      function connect() {
+        disconnect();
+
+        conn = new SockJS('http://' + window.location.host + '/socket');
+
+        conn.onopen = function(e) {
+            $('#status').html('Connected');
+        };
+
+        conn.onmessage = function(e) {
+          var data = JSON.parse(e.data);
+          if (data.type == 'gitlab'){
+              $('#message').append('<br>' + data.push_user + '<br>');
+              $.each(data.commits, function(index, value){
+                $('#message').append(value.message + '<br>');
+              });
+
+          }
+        };
+
+        conn.onclose = function() {
+          $('#status').html('Disconnected.');
+          conn = null;
+        };
+      }
+
+      function disconnect() {
+        if (conn != null) {
+          $('#status').html('Disconnecting...');
+
+          conn.close();
+          conn = null;
+        }
+      }
+
+      connect();
+
+    });
+</script>
+</head>
+<body>
+    <div id="status" style="font-size: smaller;"></div>
+    <div id="message"></div>
+</body>
+</html>
